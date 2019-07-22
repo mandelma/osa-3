@@ -19,11 +19,22 @@ let persons = [
       "number": "12-46-789542"
     },
 	{
-		"id": 4,
-		"name": "Hanna Karjanen",
-		"number": "052-213654"
+	  "id": 4,
+	  "name": "Hanna Karjanen",
+	  "number": "052-213654"
 	}
 ]
+
+const info = () => {
+	const count = persons.length
+	const date = new Date().toLocaleString()
+return `Phonebook has info for ${count} people` + "<br><br>" + ` ${date}`
+}
+	
+
+app.get('/info', (req, res) => {
+	res.send(info())
+})
 
 app.get('/api', (req, res) => {
 	res.send('<h1>Hei maailma</h1>')
