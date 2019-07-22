@@ -17,12 +17,7 @@ let persons = [
       "id": 3,
       "name": "Dan Abramov",
       "number": "12-46-789542"
-    },
-	{
-	  "id": 4,
-	  "name": "Hanna Karjanen",
-	  "number": "052-213654"
-	}
+    }
 ]
 
 const info = () => {
@@ -40,8 +35,16 @@ app.get('/api', (req, res) => {
 	res.send('<h1>Hei maailma</h1>')
 })
 
-app.get('/api/persons', (req, res) => {
-	res.json(persons)
+app.get('/api/persons/:id', (req, res) => {
+	const id = Number(req.params.id)
+	const person = persons.find(p => p.id === id)
+	console.log(id)
+	console.log(person)
+	if(person){
+		res.json(person)
+	}else{
+		res.status(404).end()
+	}
 })
 
 
