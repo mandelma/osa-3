@@ -30,6 +30,8 @@ let persons = [
     }
 ]
 
+app.use(express.static('build'))
+
 const info = () => {
 	const count = persons.length
 	const date = new Date().toLocaleString()
