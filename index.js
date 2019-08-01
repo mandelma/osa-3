@@ -3,9 +3,13 @@ const app = express()
 
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
+const cors = require('cors')
 
 app.use(bodyParser.json())
 app.use(morgan('tiny'))
+app.use(cors())
+
+
 
 let persons = [
 
@@ -52,6 +56,7 @@ app.get('/api/persons', (req, res) => {
 	//	res.status(404).end()
 	
 	//res.json(persons)
+	
 	res.send(persons)
 	
 })
@@ -88,7 +93,7 @@ app.post('/api/persons', (req, res) => {
 		number: body.number
 	}
 	persons = persons.concat(person)
-	
+	console.log(req.body)
 	res.json(person)
 })
 
