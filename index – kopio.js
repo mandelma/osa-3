@@ -1,5 +1,3 @@
-require('dotenv').config()
-
 const express = require('express')
 const app = express()
 
@@ -11,9 +9,9 @@ app.use(bodyParser.json())
 app.use(morgan('tiny'))
 app.use(cors())
 
-const Person = require('./models/personNotes')
 
-let persooons = [
+
+let persons = [
 
     {
       "id": 1,
@@ -41,7 +39,6 @@ return `Phonebook has info for ${count} people` + "<br><br>" + ` ${date}`
 }
 	
 
-
 app.get('/info', (req, res) => {
 	res.send(info())
 })
@@ -52,12 +49,6 @@ app.get('/', (req, res) => {
 
 
 
-
-app.get('/api/persons', (request, response) => {
-  Person.find({}).then(persons => {
-    response.json(persons.map(person => person.toJSON()))
-  });
-});
 
 //app.get('/api/persons', (req, res) => {
 	//const id = Number(req.params.id)
@@ -124,7 +115,7 @@ app.delete('/api/persons/:id', (request, response) => {
 
 
 
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`)
 })
