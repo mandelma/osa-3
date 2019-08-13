@@ -8,8 +8,20 @@ const morgan = require('morgan')
 const cors = require('cors')
 
 app.use(bodyParser.json())
+
+
 app.use(morgan('tiny'))
 app.use(cors())
+
+const logger = (request, response, next) => {
+  console.log('Method:', request.method)
+  console.log('Path:  ', request.path)
+  console.log('Body:  ', request.body)
+  console.log('---')
+  next()
+}
+
+app.use(logger)
 
 const Person = require('./models/personNotes')
 
@@ -34,12 +46,9 @@ let persooons = [
 
 app.use(express.static('build'))
 
-//const info = () => {
-//	const count = persons.length
-//	const date = new Date().toLocaleString()
-//return `Phonebook has info for ${count} people` + "<br><br>" + ` ${date}`
-//}
-
+app.get('/', (req, res) => {
+	res.send('<h1>Hei maailma</h1>')
+})
 
 app.post('/api/persons', (request, response) => {
   const body = request.body
@@ -58,15 +67,6 @@ app.post('/api/persons', (request, response) => {
   })
 })
 
-app.get('/info', (req, res) => {
-	res.send(info())
-})
-
-app.get('/', (req, res) => {
-	res.send('<h1>Hei maailma</h1>')
-})
-
-
 
 
 app.get('/api/persons', (request, response) => {
@@ -76,45 +76,80 @@ app.get('/api/persons', (request, response) => {
   });
 });
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id).then(note => {
-    response.json(note.toJSON())
+	if(note){
+		response.json(note.toJSON())
+	}
+	else{
+		response.status(204).end()
+	}
   })
+  .catch(error => next(error))
 })
 
 
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
 
-//const generateId = () => {
-//	const min = persons.length + 1
-//	const max = 30
-//	const maxId = persons.length > 0
-//		? Math.random() * (max - min) + min
-//		: 0
-//	return Math.ceil(maxId)
-//}
+  const personNote = {
+    name: body.name,
+    number: body.number
+  }
+
+  Person.findByIdAndUpdate(request.params.id, personNote, { new: true })
+    .then(updatedPersonNote => {
+      response.json(updatedPersonNote.toJSON())
+    })
+    .catch(error => next(error))
+})
 
 
+app.delete('/api/persons/:id', (request, response, next) => {
+  Person.findByIdAndRemove(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
+})
 
 
 	
 
 
-app.delete('/api/persons/:id', (req, res) => {
-	Person.deleteOne({ _id: req.params.id}, (err, result) => {
-		if(err) {
-			res.status(404).send(err)
-		}
-		
-		res.status(200).json({ message: "Task successfully deleted" })
-		
-		
-
-	})
-	
-})
+//app.delete('/api/persons/:id', (req, res) => {
+//	Person.deleteOne({ _id: req.params.id}, (err, result, next) => {
+//		if(err) {
+//			res.status(404).send(err)
+//		}
+//		
+//		res.status(200).json({ message: "Task successfully deleted" })
+//
+//	})
+//	
+//})
 
 
+// Delete error üle vaadata!!
 
+
+const unknownEndpoint = (req, res) => {
+	res.status(404).send({error: 'unknown endpoint'})
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError' && error.kind == 'ObjectId') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 
 
