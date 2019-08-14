@@ -3,6 +3,7 @@ require('dotenv').config()
 const express = require('express')
 const app = express()
 
+
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
@@ -50,6 +51,16 @@ app.get('/', (req, res) => {
 	res.send('<h1>Hei maailma</h1>')
 })
 
+
+app.get('/info', (request, response) => {
+	const date = new Date().toLocaleString()
+	Person.find({}).then(persons => {
+	response.send(`Phonebook has: ${persons.length} entries.<br><br> ${date}`)
+
+  });
+});
+
+
 app.post('/api/persons', (request, response) => {
   const body = request.body
 
@@ -68,11 +79,11 @@ app.post('/api/persons', (request, response) => {
 })
 
 
-
 app.get('/api/persons', (request, response) => {
   Person.find({}).then(persons => {
     response.json(persons.map(person => person.toJSON()))
-	console.log("db pikkus on: " + persons.length)
+	console.log("db pituus on: " + persons.length)
+
   });
 });
 
@@ -112,25 +123,6 @@ app.delete('/api/persons/:id', (request, response, next) => {
     })
     .catch(error => next(error))
 })
-
-
-	
-
-
-//app.delete('/api/persons/:id', (req, res) => {
-//	Person.deleteOne({ _id: req.params.id}, (err, result, next) => {
-//		if(err) {
-//			res.status(404).send(err)
-//		}
-//		
-//		res.status(200).json({ message: "Task successfully deleted" })
-//
-//	})
-//	
-//})
-
-
-// Delete error üle vaadata!!
 
 
 const unknownEndpoint = (req, res) => {
