@@ -61,7 +61,7 @@ app.get('/info', (request, response) => {
 });
 
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (body.name === undefined || body.number === undefined) {
@@ -72,10 +72,10 @@ app.post('/api/persons', (request, response) => {
     name: body.name,
     number: body.number
   })
-
-  note.save().then(savedNote => {
+	note.save().then(savedNote => {
     response.json(savedNote.toJSON())
   })
+  .catch(error => next(error))
 })
 
 

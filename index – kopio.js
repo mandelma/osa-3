@@ -1,154 +1,234 @@
-require('dotenv').config()
+import React, {useState, useEffect} from 'react'
+import henkiloTiedot from "./service/personData"
 
-const express = require('express')
-const app = express()
+import UusiHenkilo from "./UusiHenkilo"
+import Filter from "./Filter"
+import Persons from "./Persons"
 
-const bodyParser = require('body-parser')
-const morgan = require('morgan')
-const cors = require('cors')
+import "./index.css"
 
-app.use(bodyParser.json())
-
-
-app.use(morgan('tiny'))
-app.use(cors())
-
-const logger = (request, response, next) => {
-  console.log('Method:', request.method)
-  console.log('Path:  ', request.path)
-  console.log('Body:  ', request.body)
-  console.log('---')
-  next()
+const Note = (props) => {
+  return(
+    <div>
+      <li>
+        {props.note.name} {props.note.number}
+        <button onClick = {props.del}>Delete</button>
+      </li>
+    </div>
+  )
 }
 
-app.use(logger)
+const ErrorNotification = (props) => {
+  if(props.errMessage === null){
+    return null
+  }
 
-const Person = require('./models/personNotes')
+  return(
+    <div className = "error">
+      {props.errMessage}
+    </div>
+  )
+}
 
-let persooons = [
+const MessageNotification = (props) => {
+  if(props.message === null){
+    return null
+  }
 
-    {
-      "id": 1,
-      "name": "Arto Hallas",
-      "number": "040-123456"
-    },
-    {
-      "id": 2,
-      "name": "Aku Ankka",
-      "number": "040-555231"
-    },
-    {
-      "id": 3,
-      "name": "Dan Abramov",
-      "number": "12-46-789542"
+  return(
+    <div className = "message">
+      {props.message}
+    </div>
+  ) 
+}
+
+function App() {
+
+  
+
+
+  const [persons, setPersons] = useState([])
+         
+  const [newName, setNewName] = useState("")
+
+  const [newNumber, setNewNumber] = useState("")
+
+  const [filterName, setFilter] = useState("")
+
+  const [message, setMessage] = useState(null)
+
+  const [errorMessage, setErrorMessage] = useState(null)
+
+  useEffect(() => {
+    henkiloTiedot
+      .getAll()
+        .then(initialNotes => {
+          setPersons(initialNotes)
+        })
+  }, [])
+
+  
+  const lue = () => persons.map(item => <Note
+    key = {item.name}
+    note = {item}
+    del = {() => deletePerson(item.id, item.name)}
+  />)
+
+  
+
+  const lueFilter = () => persons.filter(word => 
+    word.name.toLowerCase().startsWith(filterName)).map(item =>
+    <Note
+      key = {item.name}
+      note = {item}
+      del = {() => deletePerson(item.id, item.name)}
+    />)
+
+  const deletePerson = (id, name) => {
+    if(window.confirm(`Delete ${name} ?`)){
+      //const personId = persons.find(note => note.id === id)
+      
+      henkiloTiedot
+      .delPyynto(id)
+      .then(returned => {
+        setPersons(persons.filter(i => i.id !== id))
+        console.log("Id on " + id)
+        if(errorMessage === null){
+          setMessage(
+            `${name} is deleted, from phonebook`
+          )
+          setTimeout(() => {
+            setMessage(null)
+          }, 3000)
+        }
+      })
+
+      .catch(error  => {
+        setErrorMessage(
+          `info of ${name} is already removed from server`
+        )
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 3000)
+        setPersons(persons.filter(n => n.id !== id))
+      })
     }
-]
-
-app.use(express.static('build'))
-
-app.get('/', (req, res) => {
-	res.send('<h1>Hei maailma</h1>')
-})
-
-app.post('/api/persons', (request, response) => {
-  const body = request.body
-
-  if (body.name === undefined || body.number === undefined) {
-    return response.status(400).json({ error: 'content missing' })
   }
 
-  const note = new Person({
-    name: body.name,
-    number: body.number
-  })
-
-  note.save().then(savedNote => {
-    response.json(savedNote.toJSON())
-  })
-})
-
-
-
-app.get('/api/persons', (request, response) => {
-  Person.find({}).then(persons => {
-    response.json(persons.map(person => person.toJSON()))
-	console.log("db pikkus on: " + persons.length)
-  });
-});
-
-app.get('/api/persons/:id', (request, response, next) => {
-  Person.findById(request.params.id).then(note => {
-	if(note){
-		response.json(note.toJSON())
-	}
-	else{
-		response.status(204).end()
-	}
-  })
-  .catch(error => next(error))
-})
-
-
-app.put('/api/persons/:id', (request, response, next) => {
-  const body = request.body
-
-  const personNote = {
-    name: body.name,
-    number: body.number
+  const onkoNimi = (value) => {
+    for(let i = 0; i < persons.length; i++){
+      if(persons[i].name === value){
+        return true
+      } 
+    }
+    return false
   }
 
-  Person.findByIdAndUpdate(request.params.id, personNote, { new: true })
-    .then(updatedPersonNote => {
-      response.json(updatedPersonNote.toJSON())
-    })
-    .catch(error => next(error))
-})
+  
+  const addPerson = (event) => {
+    event.preventDefault()
+    const newObject = {
+      name: newName,
+      number: newNumber
+    }
 
+    let id = 0
+    persons.forEach(element => {
+      if(element.name === newName){
+        id = element.id
+      }
+    });
 
-app.delete('/api/persons/:id', (request, response, next) => {
-  Person.findByIdAndRemove(request.params.id)
-    .then(result => {
-      response.status(204).end()
-    })
-    .catch(error => next(error))
-})
+    if(onkoNimi(newName)){
+      alert(`${newName} is already added to phonebook. Replace the old number with a new one?`)
 
+      const note = persons.find(note => note.id === id)
+      const newNote = {...note, number: newNumber}
+      
+      henkiloTiedot
+        .update(id, newNote)
+        .then(returnedNote => {
+          setPersons(persons.map(item => item.id !== id ? item : returnedNote))
 
+        if(errorMessage === null){
+            setMessage(
+              `${newName} new number is set`
+            )
+            setTimeout(() => {
+              setMessage(null)
+            }, 3000)
+          }
+          setNewName("")
+          setNewNumber("")
+          })
+          .catch(error  => {
+            setErrorMessage(
+              `information of ${newName} is already removed from server`
+            )
+            setTimeout(() => {
+              setErrorMessage(null)
+            }, 3000)
+            setPersons(persons.filter(n => n.id !== id))
+          })  
+          setNewName("")
+          setNewNumber("")
+          
+    }else{
+      henkiloTiedot
+        .create(newObject)
+          .then(returnedNote => {
+            setPersons(persons.concat(returnedNote))
+            setNewNumber("")
+            setMessage(
+              `${newName} is added to phonebook`
+            )
+            setTimeout(() => {
+              setMessage(null)
+            }, 5000)
+          })
+          setNewName("")
+          setNewNumber("")  
+    }
+  }
 
-//app.delete('/api/persons/:id', (req, res) => {
-//	Person.deleteOne({ _id: req.params.id}, (err, result, next) => {
-//		if(err) {
-//			res.status(404).send(err)
-//		}
-//		
-//		res.status(200).json({ message: "Task successfully deleted" })
-//
-//	})
-//	
-//})
+  const nameHandler = (event) => {
+    setNewName(event.target.value)
+  
+  }
 
+  const numberHandler = (event) => {
+    setNewNumber(event.target.value)
+  }
 
-const unknownEndpoint = (req, res) => {
-	res.status(404).send({error: 'unknown endpoint'})
+  return (
+    <div>
+      <h2>Phonebook</h2>
+      <ErrorNotification 
+        errMessage = {errorMessage}
+        />
+      <MessageNotification 
+        message = {message}
+      />
+      <br/>
+      <Filter
+        onChange = {(event) => setFilter(event.target.value)}
+
+      />
+      <h2>add a new</h2>
+      <UusiHenkilo 
+        addPerson = {addPerson}
+        newName = {newName}
+        newNumber = {newNumber}
+        nameHandler = {nameHandler}
+        numberHandler = {numberHandler}
+      />
+      <h2>Numbers</h2> 
+      <Persons
+        showPersons =  {filterName.length > 0
+        ? lueFilter() : lue()}
+      /> 
+    </div>
+  );
 }
 
-app.use(unknownEndpoint)
-
-const errorHandler = (error, request, response, next) => {
-  console.error(error.message)
-
-  if (error.name === 'CastError' && error.kind == 'ObjectId') {
-    return response.status(400).send({ error: 'malformatted id' })
-  }
-
-  next(error)
-}
-
-app.use(errorHandler)
-
-
-
-const PORT = process.env.PORT
-app.listen(PORT, () => {
-	console.log(`Server running on port ${PORT}`)
-})
+export default App;
