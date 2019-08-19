@@ -2,18 +2,12 @@ require('dotenv').config()
 
 const express = require('express')
 const app = express()
-
-
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
-
 app.use(bodyParser.json())
-
-
 app.use(morgan('tiny'))
 app.use(cors())
-
 const logger = (request, response, next) => {
   console.log('Method:', request.method)
   console.log('Path:  ', request.path)
@@ -27,39 +21,37 @@ app.use(logger)
 const Person = require('./models/personNotes')
 
 let persooons = [
+  {
 
-    {
-      "id": 1,
-      "name": "Arto Hallas",
-      "number": "040-123456"
-    },
-    {
-      "id": 2,
-      "name": "Aku Ankka",
-      "number": "040-555231"
-    },
-    {
-      "id": 3,
-      "name": "Dan Abramov",
-      "number": "12-46-789542"
-    }
+    'id': 1,
+    'name': 'Arto Hallas',
+    'number': '040-123456'
+  },
+  {
+    'id': 2,
+    'name': 'Aku Ankka',
+    'number': '040-555231'
+  },
+  {
+    'id': 3,
+    'name': 'Dan Abramov',
+    'number': '12-46-789542'
+  }
 ]
 
 app.use(express.static('build'))
 
 app.get('/', (req, res) => {
-	res.send('<h1>Hei maailma</h1>')
+  res.send('<h1>Hei maailma</h1>')
 })
 
 
 app.get('/info', (request, response) => {
-	const date = new Date().toLocaleString()
-	Person.find({}).then(persons => {
-	response.send(`Phonebook has: ${persons.length} entries.<br><br> ${date}`)
-
-  });
-});
-
+  const date = new Date().toLocaleString()
+  Person.find({}).then(persons => {
+    response.send(`Phonebook has: ${persons.length} entries.<br><br> ${date}`)
+  })
+})
 
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
@@ -72,29 +64,26 @@ app.post('/api/persons', (request, response, next) => {
     name: body.name,
     number: body.number
   })
-	note.save().then(savedNote => {
+  note.save().then(savedNote => {
     response.json(savedNote.toJSON())
-  })
-  .catch(error => next(error))
+  }).catch(error => next(error))
 })
 
 
 app.get('/api/persons', (request, response) => {
   Person.find({}).then(persons => {
     response.json(persons.map(person => person.toJSON()))
-	console.log("db pituus on: " + persons.length)
-
-  });
-});
+  })
+})
 
 app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id).then(note => {
-	if(note){
-		response.json(note.toJSON())
-	}
-	else{
-		response.status(204).end()
-	}
+    if(note){
+      response.json(note.toJSON())
+    }
+    else{
+      response.status(204).end()
+    }
   })
   .catch(error => next(error))
 })
@@ -102,15 +91,14 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 app.put('/api/persons/:id', (request, response, next) => {
   const body = request.body
-
   const personNote = {
     name: body.name,
     number: body.number
   }
-
+  
   Person.findByIdAndUpdate(request.params.id, personNote, { new: true })
     .then(updatedPersonNote => {
-      response.json(updatedPersonNote.toJSON())
+		response.json(updatedPersonNote.toJSON())
     })
     .catch(error => next(error))
 })
@@ -118,7 +106,7 @@ app.put('/api/persons/:id', (request, response, next) => {
 
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
-    .then(result => {
+    .then(() => {
       response.status(204).end()
     })
     .catch(error => next(error))
@@ -126,7 +114,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
 
 
 const unknownEndpoint = (req, res) => {
-	res.status(404).send({error: 'unknown endpoint'})
+  res.status(404).send({ error: 'unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
@@ -134,7 +122,7 @@ app.use(unknownEndpoint)
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
-  if (error.name === 'CastError' && error.kind == 'ObjectId') {
+  if (error.name === 'CastError' && error.kind === 'ObjectId') {
     return response.status(400).send({ error: 'malformatted id' })
   }
 
@@ -143,9 +131,7 @@ const errorHandler = (error, request, response, next) => {
 
 app.use(errorHandler)
 
-
-
 const PORT = process.env.PORT
 app.listen(PORT, () => {
-	console.log(`Server running on port ${PORT}`)
+  console.log(`Server running on port ${PORT}`)
 })
