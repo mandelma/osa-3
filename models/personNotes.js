@@ -6,13 +6,13 @@ mongoose.set('useCreateIndex', true)
 
 
 // eslint-disable-next-line no-undef
-const url = process.env.MONGODB_URI
+const url = String(process.env.MONGODB_URI)
 
 
 
 console.log('connecting to', url)
 
-mongoose.connect('mongodb+srv://Almonda:moMong-o88@cluster0-wsdfi.mongodb.net/person-app?retryWrites=true&w=majority', { useNewUrlParser: true })
+mongoose.connect( url, { useNewUrlParser: true })
   .then(result => {
     console.log('connected to MongoDB')
   })
