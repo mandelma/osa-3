@@ -5,7 +5,6 @@ mongoose.set('useFindAndModify', false)
 mongoose.set('useCreateIndex', true)
 
 
-// eslint-disable-next-line no-undef
 const url = String(process.env.MONGODB_URI)
 
 
