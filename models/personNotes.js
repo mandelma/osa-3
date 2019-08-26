@@ -12,7 +12,7 @@ const url = process.env.MONGODB_URI
 
 console.log('connecting to', url)
 
-mongoose.connect(url, { useNewUrlParser: true })
+mongoose.connect('mongodb+srv://Almonda:moMong-o88@cluster0-wsdfi.mongodb.net/person-app?retryWrites=true&w=majority', { useNewUrlParser: true })
   .then(result => {
     console.log('connected to MongoDB')
   })
