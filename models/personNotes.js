@@ -4,22 +4,17 @@ var uniqueValidator = require('mongoose-unique-validator')
 mongoose.set('useFindAndModify', false)
 mongoose.set('useCreateIndex', true)
 
-
-const url = String(process.env.MONGODB_URI)
-
-
+const url = process.env.MONGODB_URI
 
 console.log('connecting to', url)
 
-mongoose.connect( 'mongodb+srv://Almonda:moMong-o88@cluster0-wsdfi.mongodb.net/person-app?retryWrites=true&w=majority', { useNewUrlParser: true })
+mongoose.connect(url, { useNewUrlParser: true })
   .then(result => {
     console.log('connected to MongoDB')
   })
   .catch((error) => {
     console.log('error connecting to MongoDB:', error.message)
   })
-
-console.log(typeof process.env.MONGODB_URI)
 
 const noteSchema = new mongoose.Schema({
   name: { type: String, minlength: 3, required: true, unique: true },
